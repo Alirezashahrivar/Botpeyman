@@ -37,7 +37,11 @@ ADMIN_CHAT_ID = 685549695  # شناسه تلگرام شما
 CHANNEL_USERNAME = "@Tabadole_test"  # نام کاربری کانال تلگرام
 
 # وضعیت‌ها برای مکالمه
-ASK_NAME, ASK_SURNAME, ASK_PHONE, ASK_CITY, SHOW_OPTIONS, TRADE_TYPE, ASK_PAYMENT_METHOD, ASK_COUNTRY, ASK_AMOUNT, ASK_PRICE, ADMIN_DECISION = range(11)
+ASK_NAME, ASK_SURNAME, ASK_PHONE, ASK_CITY, SHOW_OPTIONS, TRADE_TYPE, \
+ASK_PAYMENT_METHOD, ASK_COUNTRY, ASK_AMOUNT, ASK_PRICE, ADMIN_DECISION, \
+GRE_USERNAME, GRE_PASSWORD, GRE_EXAM_TYPE, GRE_EXAM_DATE, GRE_CENTER, \
+GRE_TIME, GRE_DISCOUNT_CODE, GRE_NOTES, APPLICANT_INFO, APPLICANT_NAME, \
+APPLICANT_LAST_NAME, APPLICATION_LOOP, APPLICATION_DETAILS = range(24)
 
 # شروع ربات
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -70,14 +74,9 @@ async def ask_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     city = context.user_data['city']
 
     await update.message.reply_text(f"ممنون {name} {surname} از {city}!")
-    reply_keyboard = [["شروع معامله 💱", "تنظیمات ⚙️"], ["راهنما 🆘", "لغو ❌"]]
+    reply_keyboard = [["شروع معامله 💱", "پرداخت آزمون های زبان 📑", "اپلیکیشن فی دانشگاه 🏫"], ["تنظیمات ⚙️", "راهنما 🆘", "لغو ❌"]]
     await update.message.reply_text("یکی از گزینه‌های زیر را انتخاب کنید:", reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True))
     return SHOW_OPTIONS
-
-# ثبت و دریافت شناسه کانال
-async def get_channel_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=CHANNEL_USERNAME, text="این یک پیام تستی است برای دریافت شناسه کانال.")
-    await update.message.reply_text("پیامی به کانال ارسال شد. لطفاً لاگ‌های ربات را بررسی کنید تا شناسه کانال را پیدا کنید.")
 
 # پردازش گزینه‌های اصلی
 async def handle_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -86,6 +85,16 @@ async def handle_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_keyboard = [["خرید 📈", "فروش 📉"], ["بازگشت 🔙"]]
         await update.message.reply_text("آیا می‌خواهید خرید کنید یا فروش؟", reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True))
         return TRADE_TYPE
+    elif user_choice == "پرداخت آزمون های زبان 📑":
+        reply_keyboard = [["GRE", "TOEFL"], ["بازگشت 🔙"]]
+        await update.message.reply_text(
+            "لطفاً آزمون مورد نظر خود را انتخاب کنید:",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        )
+        return GRE_USERNAME
+    elif user_choice == "اپلیکیشن فی دانشگاه 🏫":
+        await handle_application_fee(update, context)  # Call the university fee handler
+        return APPLICANT_INFO
     elif user_choice == "تنظیمات ⚙️":
         await update.message.reply_text("به بخش تنظیمات خوش آمدید.")
         return SHOW_OPTIONS
@@ -211,14 +220,141 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("مکالمه لغو شد.")
     return ConversationHandler.END
 
+# ثبت اطلاعات آزمون GRE
+async def handle_gre_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    current_step = context.user_data.get('gre_step', GRE_USERNAME)
+
+    if current_step == GRE_USERNAME:
+        await update.message.reply_text("لطفاً نام کاربری ETS خود را وارد کنید:")
+        context.user_data['gre_step'] = GRE_PASSWORD
+        return GRE_PASSWORD
+    elif current_step == GRE_PASSWORD:
+        context.user_data['username'] = update.message.text
+        await update.message.reply_text("لطفاً رمز عبور ETS خود را وارد کنید:")
+        context.user_data['gre_step'] = GRE_EXAM_TYPE
+        return GRE_EXAM_TYPE
+    elif current_step == GRE_EXAM_TYPE:
+        context.user_data['password'] = update.message.text
+        reply_keyboard = [["حضوری", "Home Edition"], ["بازگشت 🔙"]]
+        await update.message.reply_text(
+            "لطفاً نوع آزمون خود را مشخص کنید (حضوری یا Home Edition):",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        )
+        context.user_data['gre_step'] = GRE_EXAM_DATE
+        return GRE_EXAM_DATE
+    elif current_step == GRE_EXAM_DATE:
+        context.user_data['exam_type'] = update.message.text
+        await update.message.reply_text("لطفاً تاریخ آزمون را وارد کنید (به‌صورت YYYY-MM-DD):")
+        context.user_data['gre_step'] = GRE_CENTER
+        return GRE_CENTER
+    elif current_step == GRE_CENTER:
+        context.user_data['exam_date'] = update.message.text
+        await update.message.reply_text("لطفاً مرکز آزمون خود را وارد کنید:")
+        context.user_data['gre_step'] = GRE_TIME
+        return GRE_TIME
+    elif current_step == GRE_TIME:
+        context.user_data['exam_center'] = update.message.text
+        reply_keyboard = [["صبح", "عصر"], ["بازگشت 🔙"]]
+        await update.message.reply_text(
+            "لطفاً زمان آزمون خود را مشخص کنید (صبح یا عصر):",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        )
+        context.user_data['gre_step'] = GRE_DISCOUNT_CODE
+        return GRE_DISCOUNT_CODE
+    elif current_step == GRE_DISCOUNT_CODE:
+        context.user_data['exam_time'] = update.message.text
+        reply_keyboard = [["بله", "خیر"], ["بازگشت 🔙"]]
+        await update.message.reply_text(
+            "آیا کد تخفیف ETS دارید؟",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        )
+        context.user_data['gre_step'] = GRE_NOTES
+        return GRE_NOTES
+    elif current_step == GRE_NOTES:
+        if update.message.text == "بله":
+            await update.message.reply_text("لطفاً کد تخفیف ETS خود را وارد کنید:")
+            return GRE_NOTES + 1
+        elif update.message.text == "خیر":
+            await update.message.reply_text("اگر یادداشتی دارید وارد کنید، در غیر این صورت تایپ کنید 'ندارم':")
+            return GRE_NOTES + 1
+        else:
+            await update.message.reply_text("لطفاً یک گزینه معتبر انتخاب کنید.")
+            return GRE_DISCOUNT_CODE
+    elif current_step == GRE_NOTES + 1:
+        context.user_data['discount_code'] = update.message.text
+        await update.message.reply_text("فرآیند ثبت‌نام با موفقیت تکمیل شد!")
+        return ConversationHandler.END
+    else:
+        await update.message.reply_text("خطایی رخ داده است. لطفاً دوباره تلاش کنید.")
+        return ConversationHandler.END
+
+# ثبت اطلاعات برای پرداخت اپلیکیشن فی دانشگاه ها
+async def handle_application_fee(update: Update, context: ContextTypes.DEFAULT_TYPE): #new
+    current_step = context.user_data.get('application_step', APPLICANT_INFO)
+
+    if current_step == APPLICANT_INFO:
+        await update.message.reply_text(
+            "سفارش را برای چه کسی ثبت می کنید؟",
+            reply_markup=ReplyKeyboardMarkup([
+                ["خودم", "فرد دیگری"]
+            ], resize_keyboard=True)
+        )
+        context.user_data['application_step'] = APPLICANT_NAME
+        return APPLICANT_NAME
+
+    elif current_step == APPLICANT_NAME:
+        context.user_data['applicant_for'] = update.message.text
+        await update.message.reply_text(
+            "لطفا نام پاسپورتی متقاضی به انگلیسی وارد کنید:*"
+        )
+        context.user_data['application_step'] = APPLICANT_LAST_NAME
+        return APPLICANT_LAST_NAME
+
+    elif current_step == APPLICANT_LAST_NAME:
+        context.user_data['applicant_name'] = update.message.text
+        await update.message.reply_text(
+            "لطفا نام خانوادگی پاسپورتی متقاضی به انگلیسی وارد کنید:*"
+        )
+        context.user_data['application_step'] = APPLICATION_LOOP
+        return APPLICATION_LOOP
+
+    elif current_step == APPLICATION_LOOP:
+        context.user_data['applicant_last_name'] = update.message.text
+        await update.message.reply_text(
+            "لطفا تعداد ارسال اپلیکیشن را بین 1 تا 5 وارد کنید:"
+        )
+        context.user_data['application_step'] = APPLICATION_DETAILS
+        return APPLICATION_DETAILS
+
+    elif current_step == APPLICATION_DETAILS:
+        try:
+            application_count = int(update.message.text)
+            if 1 <= application_count <= 5:
+                context.user_data['application_count'] = application_count
+                for i in range(1, application_count + 1):
+                    await update.message.reply_text(
+                        f"اطلاعات مرحله {i}:\n"
+                        "لینک ورود به صفحه اپلیکیشن دانشگاه:*"
+                    )
+                    await update.message.reply_text("مبلغ اپلیکیشن فی به یورو:*")
+                    await update.message.reply_text("نام کاربری:*")
+                    await update.message.reply_text("رمز عبور:*"
+                    # await update.message.reply_text(
+                    #     "توضیحات و دستور العمل رسیدن به صفحه پرداخت با ویزا کارت/مستر کارت/پی پال"
+                    )
+                await update.message.reply_text("فرآیند ثبت اطلاعات با موفقیت تکمیل شد!")
+                return ConversationHandler.END
+            else:
+                await update.message.reply_text("عدد وارد شده باید بین 1 تا 5 باشد.")
+                return APPLICATION_LOOP
+        except ValueError:
+            await update.message.reply_text("لطفا یک عدد معتبر وارد کنید.")
+            return APPLICATION_LOOP
+
 # تابع اصلی
 async def main():
     application = Application.builder().token("7567022859:AAEwxlLSEH0JV00LkeLVnYlocEgAF8wYOqI").build()
 
-    # دستور برای دریافت شناسه کانال
-    application.add_handler(CommandHandler('get_channel_id', get_channel_id))
-
-    # تنظیمات مکالمه
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -233,6 +369,19 @@ async def main():
             ASK_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_amount)],
             ASK_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_price)],
             ADMIN_DECISION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_decision)],
+            GRE_USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            GRE_PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            GRE_EXAM_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            GRE_EXAM_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            GRE_CENTER: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            GRE_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            GRE_DISCOUNT_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            GRE_NOTES: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+            APPLICANT_INFO: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)], #new
+            APPLICANT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+            APPLICANT_LAST_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+            APPLICATION_LOOP: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+            APPLICATION_DETAILS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
@@ -242,3 +391,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+    
