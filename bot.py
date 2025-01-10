@@ -213,7 +213,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # تابع اصلی
 async def main():
-    application = Application.builder().token("7551905855:AAHQtPi8uphDtfQ4sCLYwwfmwKtJ4J1MTjA").build()
+    application = Application.builder().token("7567022859:AAEwxlLSEH0JV00LkeLVnYlocEgAF8wYOqI").build()
 
     # دستور برای دریافت شناسه کانال
     application.add_handler(CommandHandler('get_channel_id', get_channel_id))
