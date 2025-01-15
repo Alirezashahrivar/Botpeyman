@@ -352,44 +352,65 @@ async def handle_application_fee(update: Update, context: ContextTypes.DEFAULT_T
             return APPLICATION_LOOP
 
 # تابع اصلی
+import asyncio
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    ConversationHandler,
+    ContextTypes,
+)
+
+# Ensure you have imported all required dependencies and your bot functions
+
 async def main():
-    application = Application.builder().token("7567022859:AAEwxlLSEH0JV00LkeLVnYlocEgAF8wYOqI").build()
+    try:
+        # Initialize application with bot token
+        application = Application.builder().token("7567022859:AAEwxlLSEH0JV00LkeLVnYlocEgAF8wYOqI").build()
 
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            ASK_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_name)],
-            ASK_SURNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_surname)],
-            ASK_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_phone)],
-            ASK_CITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_city)],
-            SHOW_OPTIONS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_options)],
-            TRADE_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_trade_type)],
-            ASK_PAYMENT_METHOD: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_payment_method)],
-            ASK_COUNTRY: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_country)],
-            ASK_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_amount)],
-            ASK_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_price)],
-            ADMIN_DECISION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_decision)],
-            GRE_USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            GRE_PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            GRE_EXAM_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            GRE_EXAM_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            GRE_CENTER: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            GRE_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            GRE_DISCOUNT_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            GRE_NOTES: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
-            APPLICANT_INFO: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)], #new
-            APPLICANT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
-            APPLICANT_LAST_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
-            APPLICATION_LOOP: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
-            APPLICATION_DETAILS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
-        },
-        fallbacks=[CommandHandler('cancel', cancel)],
-    )
+        # Setup ConversationHandler
+        conv_handler = ConversationHandler(
+            entry_points=[CommandHandler('start', start)],
+            states={
+                ASK_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_name)],
+                ASK_SURNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_surname)],
+                ASK_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_phone)],
+                ASK_CITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_city)],
+                SHOW_OPTIONS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_options)],
+                TRADE_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_trade_type)],
+                ASK_PAYMENT_METHOD: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_payment_method)],
+                ASK_COUNTRY: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_country)],
+                ASK_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_amount)],
+                ASK_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_price)],
+                ADMIN_DECISION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_decision)],
+                GRE_USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                GRE_PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                GRE_EXAM_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                GRE_EXAM_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                GRE_CENTER: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                GRE_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                GRE_DISCOUNT_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                GRE_NOTES: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_gre_registration)],
+                APPLICANT_INFO: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+                APPLICANT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+                APPLICANT_LAST_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+                APPLICATION_LOOP: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+                APPLICATION_DETAILS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
+            },
+            fallbacks=[CommandHandler('cancel', cancel)],
+        )
 
-    application.add_handler(conv_handler)
-    await application.run_polling()
+        # Add handlers to the application
+        application.add_handler(conv_handler)
+
+        # Start the bot
+        print("Bot is running...")
+        await application.run_polling()
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
 
-    
