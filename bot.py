@@ -393,17 +393,19 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # تصمیم مدیر
 async def handle_admin_decision(update: Update, context: ContextTypes.DEFAULT_TYPE):
     decision = update.message.text
+    
     if decision == "ارسال به کانال 📢":
         message_channel = context.user_data['message_channel']
         await context.bot.send_message(chat_id=CHANNEL_USERNAME, text=message_channel, parse_mode="Markdown")
         await update.message.reply_text("درخواست با موفقیت به کانال ارسال شد.")
     elif decision in ["بازگشت 🔙", "لغو ❌"]:
-        await return_to_main_menu(update, context)
+        await update.message.reply_text("به منوی اصلی بازگشتید.")
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر را انتخاب کنید.")
         return ADMIN_DECISION
-
-    return ConversationHandler.END
+    
+    # Return to the main menu
+    return await return_to_main_menu(update, context)
 
 # لغو مکالمه
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
