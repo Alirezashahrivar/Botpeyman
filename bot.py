@@ -186,8 +186,19 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
         price = context.user_data['price']
         trade_fee = context.user_data['trade_fee']
 
+
+
+ # Keep track of request count
+        if 'request_count' not in context.bot_data:
+            context.bot_data['request_count'] = 1
+        else:
+            context.bot_data['request_count'] += 1
+
+        request_number = context.bot_data['request_count']
+
+
         # ارسال به مدیر
-        message_admin = (f"معامله جدید شماره {request_number}:
+        message_admin = (f"معامله جدید شماره {request_number}:\n"
         
                          f"نام: {name}\n"
                          f"نام خانوادگی: {surname}\n"
@@ -201,15 +212,28 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
                          f"هزینه معامله: {trade_fee:.2f} یورو")
         await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=message_admin)
 
+  # ارسال به مدیر
+        message_admin = (f"معامله جدید شماره {request_number}:\n"
+                         f"نام: {name}\n"
+                         f"نام خانوادگی: {surname}\n"
+                         f"شماره تلفن: {phone}\n"
+                         f"شهر: {city}\n"
+                         f"نوع معامله: {trade_type}\n"
+                         f"روش پرداخت: {payment_method}\n"
+                         f"کشور: {country}\n"
+                         f"مقدار: {amount} یورو\n"
+                         f"قیمت: {price} تومان\n"
+                         f"هزینه معامله: {trade_fee:.2f} یورو")
+        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=message_admin)
+
         # ارسال به کانال
-        message_channel = (f"معامله جدید شماره {request_number}:
+        message_channel = (f"معامله جدید شماره {request_number}:\n"
                            f"نوع معامله: {trade_type}\n"
                            f"مقدار: {amount} یورو\n"
                            f"قیمت: {price} تومان\n"
                            f"روش پرداخت: {payment_method}\n"
-                           f"کشور: {country}")
-                           f"[تماس با مدیر](https://t.me/{ADMIN_CHAT_ID})")
-
+                           f"کشور: {country}\n"
+                           f"[تماس با ادمین](https://t.me/alirezashra)")
         reply_keyboard = [["ارسال به کانال 📢", "بازگشت 🔙"]]
         await update.message.reply_text("آیا می‌خواهید این درخواست را به کانال ارسال کنید؟", reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True))
         context.user_data['message_channel'] = message_channel
@@ -223,7 +247,7 @@ async def handle_admin_decision(update: Update, context: ContextTypes.DEFAULT_TY
     decision = update.message.text
     if decision == "ارسال به کانال 📢":
         message_channel = context.user_data['message_channel']
-        await context.bot.send_message(chat_id=CHANNEL_USERNAME, text=message_channel)
+        await context.bot.send_message(chat_id=CHANNEL_USERNAME, text=message_channel, parse_mode="Markdown")
         await update.message.reply_text("درخواست با موفقیت به کانال ارسال شد.")
     elif decision in ["بازگشت 🔙", "لغو ❌"]:
         await return_to_main_menu(update, context)
