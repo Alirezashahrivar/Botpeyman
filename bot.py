@@ -545,7 +545,7 @@ async def handle_application_fee(update: Update, context: ContextTypes.DEFAULT_T
 
 # تابع اصلی
 async def main():
-    application = Application.builder().token("7823324333:AAG6QRPbZ4mVmsEtvITEfCWY6katXTIMqTQ").build()
+    application = Application.builder().token("7944446546:AAFEVJvOJlLDJ7y-U-v1lc5OIfgh_lFbUgE").build()
 
     # تنظیم ConversationHandler
     conv_handler = ConversationHandler(
