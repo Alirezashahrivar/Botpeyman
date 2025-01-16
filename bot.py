@@ -22,7 +22,7 @@ ASK_PAYMENT_METHOD, ASK_COUNTRY, ASK_AMOUNT, ASK_PRICE, ADMIN_DECISION, \
 GRE_USERNAME, GRE_PASSWORD, GRE_EXAM_TYPE, GRE_EXAM_DATE, GRE_CENTER, \
 GRE_TIME, GRE_DISCOUNT_CODE, GRE_NOTES, APPLICANT_INFO, APPLICANT_NAME, \
 APPLICANT_LAST_NAME, APPLICATION_LOOP, APPLICATION_DETAILS, \
-SOS_OPTIONS, TOEFL_FAQS, TOEFL_DETAILS, CONFIRM_FEE= range(28)
+SOS_OPTIONS, TOEFL_FAQS, TOEFL_DETAILS, CONFIRM_FEE, GRE_DETAILS= range(29)
 
 # بازگشت به منوی اصلی
 async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,8 +130,19 @@ async def handle_trade_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # پردازش راهنما
 async def handle_sos_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_choice = update.message.text
+
     if user_choice == "GRE":
-        await update.message.reply_text("شما گزینه GRE را انتخاب کردید.")
+        reply_keyboard = [
+            ["GRE چیست؟", "بخش‌های آزمون GRE"],
+            ["نحوه ثبت نام GRE", "سوالات متداول درباره ثبت نام GRE"],
+            ["بازگشت 🔙"]
+        ]
+        await update.message.reply_text(
+            "لطفاً یکی از گزینه‌های زیر را انتخاب کنید:",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        )
+        return GRE_DETAILS
+
     elif user_choice == "TOEFL":
         reply_keyboard = [
             ["تافل چیست؟", "بخش های آزمون تافل"],
@@ -143,14 +154,26 @@ async def handle_sos_options(update: Update, context: ContextTypes.DEFAULT_TYPE)
             reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
         )
         return TOEFL_DETAILS
+
     elif user_choice == "تبادل ارز":
-        await update.message.reply_text("شما گزینه تبادل ارز را انتخاب کردید.")
+        await update.message.reply_text(
+            "در حال حاضر خدمات تبادل ارز ارائه می‌شود. لطفاً با پشتیبانی تماس بگیرید."
+        )
+        return SOS_OPTIONS
+
     elif user_choice == "بازگشت 🔙":
-        await update.message.reply_text("به منوی اصلی بازگشتید.")
-        return SHOW_OPTIONS
+        # Return to the main SOS menu
+        reply_keyboard = [["GRE", "TOEFL", "تبادل ارز"], ["بازگشت به منوی اصلی"]]
+        await update.message.reply_text(
+            "لطفاً یکی از گزینه‌های زیر را انتخاب کنید:",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        )
+        return SOS_OPTIONS
+
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر را انتخاب کنید.")
-    return SOS_OPTIONS
+        return SOS_OPTIONS
+
 
 # پردازش راهنمای آزمون تافل
 async def handle_toefl_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -553,7 +576,8 @@ async def main():
             APPLICATION_DETAILS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_application_fee)],
             SOS_OPTIONS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_sos_options)],
             TOEFL_DETAILS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_toefl_details)],
-            TOEFL_FAQS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_toefl_faqs)]
+            TOEFL_FAQS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_toefl_faqs)],
+            GRE_DETAILS : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_toefl_faqs)],
             
         },
         fallbacks=[CommandHandler('cancel', cancel)],
