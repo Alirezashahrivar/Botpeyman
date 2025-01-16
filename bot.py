@@ -170,9 +170,15 @@ async def handle_sos_options(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         return SOS_OPTIONS
 
+    elif user_choice == "بازگشت به منوی اصلی":
+        # Return to the main menu
+        await return_to_main_menu(update, context)
+        return SHOW_OPTIONS
+
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر را انتخاب کنید.")
         return SOS_OPTIONS
+
 
 
 # پردازش راهنمای آزمون تافل
