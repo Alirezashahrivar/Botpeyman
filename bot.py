@@ -237,7 +237,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # تابع اصلی
 async def main():
-    application = Application.builder().token("7567022859:AAEwxlLSEH0JV00LkeLVnYlocEgAF8wYOqI").build()
+    application = Application.builder().token("7823324333:AAG6QRPbZ4mVmsEtvITEfCWY6katXTIMqTQ").build()
 
     # تنظیم ConversationHandler
     conv_handler = ConversationHandler(
