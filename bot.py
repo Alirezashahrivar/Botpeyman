@@ -33,6 +33,19 @@ async def return_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
     return SHOW_OPTIONS
 
+# بازگشت به منوی اصلی TOEFL
+async def return_to_toefl_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    reply_keyboard = [
+        ["تافل چیست؟", "بخش های آزمون تافل"],
+        ["نحوه ثبت نام تافل", "سوالات متداول درباره ثبت نام تافل"],
+        ["بازگشت 🔙"]
+    ]
+    await update.message.reply_text(
+        "یکی از گزینه‌های زیر را انتخاب کنید:",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+    )
+    return TOEFL_DETAILS
+
 # شروع ربات
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("سلام! لطفاً نام خود را وارد کنید:")
