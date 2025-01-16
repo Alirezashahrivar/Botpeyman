@@ -187,7 +187,8 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
         trade_fee = context.user_data['trade_fee']
 
         # ارسال به مدیر
-        message_admin = (f"معامله جدید:\n"
+        message_admin = (f"معامله جدید شماره {request_number}:
+        
                          f"نام: {name}\n"
                          f"نام خانوادگی: {surname}\n"
                          f"شماره تلفن: {phone}\n"
@@ -201,12 +202,14 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=message_admin)
 
         # ارسال به کانال
-        message_channel = (f"معامله جدید:\n"
+        message_channel = (f"معامله جدید شماره {request_number}:
                            f"نوع معامله: {trade_type}\n"
                            f"مقدار: {amount} یورو\n"
                            f"قیمت: {price} تومان\n"
                            f"روش پرداخت: {payment_method}\n"
                            f"کشور: {country}")
+                           f"[تماس با مدیر](https://t.me/{ADMIN_CHAT_ID})")
+
         reply_keyboard = [["ارسال به کانال 📢", "بازگشت 🔙"]]
         await update.message.reply_text("آیا می‌خواهید این درخواست را به کانال ارسال کنید؟", reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True))
         context.user_data['message_channel'] = message_channel
