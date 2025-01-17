@@ -14,7 +14,7 @@ nest_asyncio.apply()
 
 # شناسه مدیر
 ADMIN_CHAT_ID = 685549695  # شناسه تلگرام شما
-CHANNEL_USERNAME = "@Tabadole_test"  # نام کاربری کانال تلگرام
+CHANNEL_USERNAME = "@PM_TabadolBot"  # نام کاربری کانال تلگرام
 
 # وضعیت‌ها برای مکالمه
 ASK_NAME, ASK_SURNAME, ASK_PHONE, ASK_CITY, SHOW_OPTIONS, TRADE_TYPE, \
@@ -556,7 +556,7 @@ async def handle_application_fee(update: Update, context: ContextTypes.DEFAULT_T
 
 # تابع اصلی
 async def main():
-    application = Application.builder().token("7944446546:AAFEVJvOJlLDJ7y-U-v1lc5OIfgh_lFbUgE").build()
+    application = Application.builder().token("7823324333:AAG6QRPbZ4mVmsEtvITEfCWY6katXTIMqTQ").build()
 
     # تنظیم ConversationHandler
     conv_handler = ConversationHandler(
