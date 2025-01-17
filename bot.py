@@ -112,7 +112,7 @@ async def handle_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر را انتخاب کنید.")
         return SHOW_OPTIONS
-    
+
 # پردازش انتخاب خرید یا فروش
 async def handle_trade_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     trade_choice = update.message.text
@@ -225,8 +225,13 @@ async def handle_toefl_details(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return TOEFL_FAQS
     elif user_choice == "بازگشت 🔙":
-        await update.message.reply_text("به منوی اصلی بازگشتید.")
-        return SHOW_OPTIONS
+        # Return to the SOS menu for TOEFL
+        reply_keyboard = [["GRE", "TOEFL", "تبادل ارز"], ["بازگشت به منوی اصلی"]]
+        await update.message.reply_text(
+            "لطفاً یکی از گزینه‌های زیر را انتخاب کنید:",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
+        )
+        return SOS_OPTIONS
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر را انتخاب کنید.")
     return TOEFL_DETAILS
@@ -353,7 +358,7 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # ارسال به مدیر
         message_admin = (f"معامله جدید شماره {request_number}:\n"
-        
+
                          f"نام: {name}\n"
                          f"نام خانوادگی: {surname}\n"
                          f"شماره تلفن: {phone}\n"
@@ -399,7 +404,7 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # تصمیم مدیر
 async def handle_admin_decision(update: Update, context: ContextTypes.DEFAULT_TYPE):
     decision = update.message.text
-    
+
     if decision == "ارسال به کانال 📢":
         message_channel = context.user_data['message_channel']
         await context.bot.send_message(chat_id=CHANNEL_USERNAME, text=message_channel, parse_mode="Markdown")
@@ -409,7 +414,7 @@ async def handle_admin_decision(update: Update, context: ContextTypes.DEFAULT_TY
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر را انتخاب کنید.")
         return ADMIN_DECISION
-    
+
     # Return to the main menu
     return await return_to_main_menu(update, context)
 
@@ -551,7 +556,7 @@ async def handle_application_fee(update: Update, context: ContextTypes.DEFAULT_T
 
 # تابع اصلی
 async def main():
-    application = Application.builder().token("7944446546:AAFEVJvOJlLDJ7y-U-v1lc5OIfgh_lFbUgE").build()
+    application = Application.builder().token("7418611705:AAFZx5wqrHisM0vFup9zq56bvlpQmFYsLls").build()
 
     # تنظیم ConversationHandler
     conv_handler = ConversationHandler(
@@ -586,7 +591,7 @@ async def main():
             TOEFL_DETAILS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_toefl_details)],
             TOEFL_FAQS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_toefl_faqs)],
             GRE_DETAILS : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_toefl_faqs)],
-            
+
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
