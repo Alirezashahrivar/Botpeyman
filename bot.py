@@ -14,7 +14,7 @@ nest_asyncio.apply()
 
 # شناسه مدیر
 ADMIN_CHAT_ID = 685549695  # شناسه تلگرام شما
-CHANNEL_USERNAME = "@PM_TabadolBot"  # نام کاربری کانال تلگرام
+CHANNEL_USERNAME = "@PM_Tabadol"  # نام کاربری کانال تلگرام
 
 # وضعیت‌ها برای مکالمه
 ASK_NAME, ASK_SURNAME, ASK_PHONE, ASK_CITY, SHOW_OPTIONS, TRADE_TYPE, \
