@@ -1,6 +1,7 @@
 import nest_asyncio
 import asyncio
 from telegram import Update, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -371,49 +372,107 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
                          f"هزینه معامله: {trade_fee:.2f} یورو")
         await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=message_admin)
 
-  # ارسال به مدیر
-        message_admin = (f"معامله جدید شماره {request_number}:\n"
-                         f"نام: {name}\n"
-                         f"نام خانوادگی: {surname}\n"
-                         f"شماره تلفن: {phone}\n"
-                         f"شهر: {city}\n"
-                         f"نوع معامله: {trade_type}\n"
-                         f"روش پرداخت: {payment_method}\n"
-                         f"کشور: {country}\n"
-                         f"مقدار: {amount} یورو\n"
-                         f"قیمت: {price} تومان\n"
-                         f"هزینه معامله: {trade_fee:.2f} یورو")
-        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=message_admin)
-
-        # ارسال به کانال
-        message_channel = (f"معامله جدید شماره {request_number}:\n"
-                           f"نوع معامله: {trade_type}\n"
-                           f"مقدار: {amount} یورو\n"
-                           f"قیمت: {price} تومان\n"
-                           f"روش پرداخت: {payment_method}\n"
-                           f"کشور: {country}\n"
-                           f"[تماس با ادمین](https://t.me/alirezashra)")
-        reply_keyboard = [["ارسال به کانال 📢", "بازگشت 🔙"]]
-        await update.message.reply_text("آیا می‌خواهید این درخواست را به کانال ارسال کنید؟", reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True))
-        context.user_data['message_channel'] = message_channel
-        return ADMIN_DECISION
-    else:
-        await return_to_main_menu(update, context)
-        return ConversationHandler.END
-
-# تصمیم مدیر
+  # تصمیم مدیر: ارسال معامله به کانال همراه با دکمه "تماس با فروشنده"
 async def handle_admin_decision(update: Update, context: ContextTypes.DEFAULT_TYPE):
     decision = update.message.text
 
     if decision == "ارسال به کانال 📢":
         message_channel = context.user_data['message_channel']
-        await context.bot.send_message(chat_id=CHANNEL_USERNAME, text=message_channel, parse_mode="Markdown")
+        trade_id = context.bot_data.get('trade_counter', 1)
+        context.bot_data['trade_counter'] = trade_id + 1
+
+        # ذخیره اطلاعات معامله
+        context.bot_data[f'trade_{trade_id}'] = {
+            "seller_id": update.message.chat_id,
+            "status": "در انتظار خریدار"
+        }
+
+        # دکمه تماس با فروشنده
+        keyboard = [[
+            InlineKeyboardButton("💬 تماس با فروشنده", callback_data=f"contact_seller_{trade_id}")
+        ]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        # ارسال به کانال
+        trade_message = (f"📢 **معامله جدید شماره {trade_id}**\n"
+                         f"🔄 نوع معامله: {context.user_data['trade_type']}\n"
+                         f"💰 مقدار: {context.user_data['amount']} یورو\n"
+                         f"💲 قیمت: {context.user_data['price']} تومان\n"
+                         f"💳 روش پرداخت: {context.user_data['payment_method']}\n"
+                         f"🌍 کشور: {context.user_data.get('country', 'نامشخص')}\n"
+                         f"📌 **وضعیت:** در انتظار خریدار\n"
+                         f"[📞 تماس با ادمین](https://t.me/alirezashra)")
+
+        message = await context.bot.send_message(chat_id=CHANNEL_USERNAME, text=trade_message, reply_markup=reply_markup, parse_mode="Markdown")
+        context.bot_data[f'trade_message_id_{trade_id}'] = message.message_id
+
         await update.message.reply_text("درخواست با موفقیت به کانال ارسال شد.")
+        return await return_to_main_menu(update, context)
+
     elif decision in ["بازگشت 🔙", "لغو ❌"]:
         await update.message.reply_text("به منوی اصلی بازگشتید.")
+        return await return_to_main_menu(update, context)
+
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر را انتخاب کنید.")
         return ADMIN_DECISION
+
+# شروع گفتگو بین خریدار و فروشنده در ربات
+async def start_trade_convo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    trade_id = query.data.split("_")[-1]
+
+    # دریافت اطلاعات معامله
+    trade_info = context.bot_data.get(f'trade_{trade_id}')
+    if not trade_info:
+        await query.answer("این معامله دیگر معتبر نیست.", show_alert=True)
+        return
+
+    seller_id = trade_info["seller_id"]
+    buyer_id = query.from_user.id
+    context.bot_data[f'trade_{trade_id}']["buyer_id"] = buyer_id
+
+    # به روزرسانی وضعیت معامله
+    context.bot_data[f'trade_{trade_id}']["status"] = "در حال مذاکره"
+
+    # پیام به فروشنده
+    await context.bot.send_message(seller_id, f"👤 یک خریدار برای معامله {trade_id} علاقه‌مند است.\n"
+                                              f"🔄 لطفاً به معامله بپیوندید و شرایط را بررسی کنید.")
+
+    # ایجاد گروه گفتگو بین خریدار و فروشنده در ربات
+    trade_group_name = f"معامله شماره {trade_id}"
+    trade_group = await context.bot.create_chat(title=trade_group_name, user_ids=[seller_id, buyer_id])
+
+    await context.bot.send_message(trade_group.id, f"👥 معامله شماره {trade_id} آغاز شد!\n"
+                                                   f"🔄 لطفاً در اینجا شرایط معامله را بررسی کنید.\n"
+                                                   f"✅ پس از توافق، وضعیت معامله را به 'تکمیل شده' تغییر دهید.")
+
+    # به روزرسانی پیام در کانال برای نمایش وضعیت جدید
+    trade_message_id = context.bot_data.get(f'trade_message_id_{trade_id}')
+    updated_trade_message = (f"📢 **معامله شماره {trade_id}**\n"
+                             f"🔄 نوع معامله: {context.bot_data[f'trade_{trade_id}']['status']}\n"
+                             f"📌 **وضعیت:** در حال مذاکره")
+    await context.bot.edit_message_text(chat_id=CHANNEL_USERNAME, message_id=trade_message_id, text=updated_trade_message, parse_mode="Markdown")
+
+    await query.answer("💬 معامله آغاز شد! لطفاً شرایط معامله را بررسی کنید.")
+
+# تابع برای تغییر وضعیت معامله
+async def update_trade_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    trade_id = context.user_data.get("trade_id")
+    new_status = update.message.text
+
+    if new_status in ["تکمیل شد ✅", "لغو شد ❌"]:
+        context.bot_data[f'trade_{trade_id}']["status"] = new_status
+
+        # به روزرسانی پیام در کانال
+        trade_message_id = context.bot_data.get(f'trade_message_id_{trade_id}')
+        updated_trade_message = (f"📢 **معامله شماره {trade_id}**\n"
+                                 f"📌 **وضعیت:** {new_status}")
+
+        await context.bot.edit_message_text(chat_id=CHANNEL_USERNAME, message_id=trade_message_id, text=updated_trade_message, parse_mode="Markdown")
+        await update.message.reply_text(f"وضعیت معامله {trade_id} به '{new_status}' تغییر یافت.")
+    else:
+        await update.message.reply_text("لطفاً وضعیت معتبر وارد کنید (تکمیل شد ✅ / لغو شد ❌).")
 
     # Return to the main menu
     return await return_to_main_menu(update, context)
@@ -595,7 +654,8 @@ async def main():
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
-
+    application.add_handler(CallbackQueryHandler(start_trade_convo, pattern=r"contact_seller_\d+"))
+    application.add_handler(CommandHandler("update_trade_status", update_trade_status))
     application.add_handler(conv_handler)
 
     # Start bot
