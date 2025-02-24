@@ -160,9 +160,10 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=trade_details)
 
         # Ask admin for decision
-        reply_keyboard = [["ارسال به کانال 📢", "لغو ❌"]]
-        await update.message.reply_text(
-            "درخواست به ادمین ارسال شد. منتظر تایید باشید.",
+        reply_keyboard = [["تایید ✅", "رد ❌"]]
+        await context.bot.send_message(
+            chat_id=ADMIN_CHAT_ID,
+            text="آیا این معامله را تایید می‌کنید؟",
             reply_markup=ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True),
         )
         return ADMIN_DECISION
@@ -175,7 +176,7 @@ async def confirm_fee(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Handle admin decision
 async def handle_admin_decision(update: Update, context: ContextTypes.DEFAULT_TYPE):
     decision = update.message.text
-    if decision == "ارسال به کانال 📢":
+    if decision == "تایید ✅":
         # Generate a unique trade ID
         trade_id = context.bot_data.get("trade_counter", 1)
         context.bot_data["trade_counter"] = trade_id + 1
@@ -205,8 +206,8 @@ async def handle_admin_decision(update: Update, context: ContextTypes.DEFAULT_TY
 
         await update.message.reply_text("معامله با موفقیت به کانال ارسال شد.")
         return await return_to_main_menu(update, context)
-    elif decision == "لغو ❌":
-        await update.message.reply_text("معامله لغو شد.")
+    elif decision == "رد ❌":
+        await update.message.reply_text("معامله رد شد.")
         return await return_to_main_menu(update, context)
     else:
         await update.message.reply_text("لطفاً یک گزینه معتبر انتخاب کنید.")
